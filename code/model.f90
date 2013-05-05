@@ -1,21 +1,51 @@
 module model
   implicit none
   
-  private calcaverdens, calcavervel
-  public equil
+  private calcaverdens, calcavervel, equil, applybc
+  public timestep, init
 
 contains
 
-  subroutine newequil(Lx, Ly, Nvel, dens)
+  subroutine timestep(Lx, Ly, Nvel, dens, tau)
     integer,intent(in) :: Lx, Ly, Nvel
-    real(8),intent(in) :: dens(Lx, Ly, Nvel)
+    real(8),intent(in) :: tau
+    real(8),intent(inout) :: dens(Lx, Ly, Nvel)
+
+    real(8) :: eqdens(Lx, Ly, Nvel), deltaP
+
+    deltaP = 0.0001d0
+
+    dens = call applybc(Lx, Ly, Nvel, dens)
+
+    dens(:, :, 2) = dens(:, :, 2) + deltaP
+    dens(:, :, 5) = dens(:, :, 5) - deltaP
+
+    eqdens = call equil(Lx, Ly, Nvel, dens)
+    dens = (1 - 1 / tau) * dens + eqdens / tau
   end subroutine
+  
+  real(8) function init(Lx, Ly, Nvel) result(eqdens(Lx, Ly, Nvel)
+    integer,intent(in) :: Lx, Ly, Nvel
+
+    integer :: k
+    real(8) :: averdens = 1d0
+
+    eqdens(:, :, 1) = 4 / 9d0 * averdens
+
+    do k = 2, Nvel
+      if (modulo(k,2)==0) then
+        eqdens(:, :, k) = averdens / 9d0
+      else if (modulo(k,2)==1) then
+        eqdens(:, :, k) = averdens / 36d0
+      end if
+    end do
+  end function
 
   real(8) function equil(Lx, Ly, Nvel, dens) result(eqdens(Lx, Ly, Nvel)
     integer,intent(in) :: Lx, Ly, Nvel
     real(8),intent(in) :: dens(Lx, Ly, Nvel)
 
-    integer :: i, j, k, velx, vely
+    integer :: k, velx(Nvel), vely(Nvel)
     real(8) :: avervel(Lx, Ly, 2), averdens(Lx, Ly)
     real(8) :: sqvel(Lx, Ly), normvel(Lx, Ly)
 
@@ -35,6 +65,7 @@ contains
       else if (modulo(k,2)==1) then
         eqdens(:, :, k) = averdens / 36d0 * &
               (1 + 3 * normvel + 4.5d0 * normvel**2 - 1.5d0 * sqvel)
+      end if
     end do
   end function
 
@@ -70,5 +101,24 @@ contains
     averdens = call calcaverdens(Lx, Ly, Nvel, dens)
     avervel(:, :, 1) = avervel(:, :, 1) / averdens
     avervel(:, :, 2) = avervel(:, :, 2) / averdens
+  end function
+
+  real(8) function applybc(Lx, Ly, Nvel, dens) result(newdens(Lx, Ly, Nvel))
+    integer,intent(in) :: Lx, Ly, Nvel
+    real(8),intent(in) :: dens(Lx, Ly, Nvel)
+
+    integer :: i, j, k
+
+    newdens = dens
+
+    do i = 1, Lx
+      newdens(i, 1, 4) = dens(i, 1, 8)
+      newdens(i, 1, 5) = dens(modulo(i + 1, Lx), 1, 9)
+      newdens(i, 1, 3) = dens(modulo(i - 1, Lx), 1, 7)
+      newdens(i, Ly, 8) = dens(1, Lx, 4)
+      newdens(i, Ly, 9) = dens(modulo(i - 1, Lx), Lx, 5)
+      newdens(i, Ly, 7) = dens(modulo(i + 1, Lx), Lx, 3)
+    end do
+    newdens(1, :, :) = dens(Lx, :, :)
   end function
 end module

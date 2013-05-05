@@ -25,9 +25,10 @@ program boltzmann
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 !! INPUT: Row and column size
-  integer,parameter :: Lx = 150, Ly = 50, Nvel = 9
-  real(8) :: dens(Lx, Ly, Nvel), newdens(Lx, Ly, Nvel), tau = 1, &
-              eqdens(LX, Ly, Nvel)
+  integer,parameter :: Lx = 150, Ly = 50, Nvel = 9, t_final = 1000
+  integer :: tt
+  real(8),parameter :: tau = 1d0
+  real(8) :: dens(Lx, Ly, Nvel)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Main Body !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -36,8 +37,14 @@ program boltzmann
 !! Initiate plot and open files for writing !!
   call plot_init()
   call opentextfiles
+  
+!! Initialize densities for further use !!
+  dens = call init(Lx, Ly, Nvel) 
 
-
+!! Main simulation routine !!
+  do tt = 1, t_final
+    call timestep(Lx, Ly, Nvel, dens, tau)
+  end do
 
 !! Close text and plot commands !!
   call closetextfiles
