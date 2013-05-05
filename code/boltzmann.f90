@@ -39,7 +39,7 @@ program boltzmann
   call opentextfiles
   
 !! Initialize densities for further use !!
-  dens = call init(Lx, Ly, Nvel) 
+  dens = init(Lx, Ly, Nvel) 
 
 !! Main simulation routine !!
   do tt = 1, t_final

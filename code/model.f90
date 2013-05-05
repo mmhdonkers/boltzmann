@@ -15,20 +15,20 @@ contains
 
     deltaP = 0.0001d0
 
-    dens = call applybc(Lx, Ly, Nvel, dens)
+    dens = applybc(Lx, Ly, Nvel, dens)
 
     dens(:, :, 2) = dens(:, :, 2) + deltaP
     dens(:, :, 5) = dens(:, :, 5) - deltaP
 
-    eqdens = call equil(Lx, Ly, Nvel, dens)
+    eqdens = equil(Lx, Ly, Nvel, dens)
     dens = (1 - 1 / tau) * dens + eqdens / tau
   end subroutine
   
-  real(8) function init(Lx, Ly, Nvel) result(eqdens(Lx, Ly, Nvel)
+  function init(Lx, Ly, Nvel) result(eqdens)
     integer,intent(in) :: Lx, Ly, Nvel
 
     integer :: k
-    real(8) :: averdens = 1d0
+    real(8) :: averdens = 1d0, eqdens(Lx, Ly, Nvel)
 
     eqdens(:, :, 1) = 4 / 9d0 * averdens
 
@@ -41,24 +41,24 @@ contains
     end do
   end function
 
-  real(8) function equil(Lx, Ly, Nvel, dens) result(eqdens(Lx, Ly, Nvel)
+  function equil(Lx, Ly, Nvel, dens) result(eqdens)
     integer,intent(in) :: Lx, Ly, Nvel
     real(8),intent(in) :: dens(Lx, Ly, Nvel)
 
     integer :: k, velx(Nvel), vely(Nvel)
-    real(8) :: avervel(Lx, Ly, 2), averdens(Lx, Ly)
+    real(8) :: avervel(Lx, Ly, 2), averdens(Lx, Ly), eqdens(Lx, Ly, Nvel)
     real(8) :: sqvel(Lx, Ly), normvel(Lx, Ly)
 
     velx = [0,1,1,0,-1,-1,-1,0,1]
     vely = [0,0,1,1,1,0,-1,-1,-1]
-    avervel = call calcavervel(Lx, Ly, Nvel, dens) 
-    averdens = call calcaverdens(Lx, Ly, Nvel, dens)   
+    avervel = calcavervel(Lx, Ly, Nvel, dens) 
+    averdens = calcaverdens(Lx, Ly, Nvel, dens)   
 
     sqvel = avervel(:, :, 1)**2 + avervel(:, :, 2)**2
     eqdens(:, :, 1) = 4 / 9d0 * averdens * (1 - 1.5d0 * sqvel)
 
-    normvel = avervel(:, :, 1) * velx + avervel(:, :, 2) * vely
     do k = 2, Nvel
+      normvel = avervel(:, :, 1) * velx(k) + avervel(:, :, 2) * vely(k)
       if (modulo(k,2)==0) then
         eqdens(:, :, k) = averdens / 9d0 * &
               (1 + 3 * normvel + 4.5d0 * normvel**2 - 1.5d0 * sqvel)
@@ -69,11 +69,12 @@ contains
     end do
   end function
 
-  real(8) function calcaverdens(Lx, Ly, Nvel, dens) result(averdens(Lx, Ly))
+  function calcaverdens(Lx, Ly, Nvel, dens) result(averdens)
     integer,intent(in) :: Lx, Ly, Nvel
     real(8),intent(in) :: dens(Lx, Ly, Nvel)
 
     integer :: i, j
+    real(8) :: averdens(Lx, Ly)
 
     do i = 1, Lx
       do j = 1, Ly
@@ -82,12 +83,12 @@ contains
     end do
   end function
 
-  real(8) function calcavervel(Lx, Ly, Nvel, dens) result(avervel(Lx, Ly, 2))
+  function calcavervel(Lx, Ly, Nvel, dens) result(avervel)
     integer,intent(in) :: Lx, Ly, Nvel
     real(8),intent(in) :: dens(Lx, Ly, Nvel)
 
     integer :: i, j, velx(Nvel), vely(Nvel)
-    real(8) :: averdens(Lx, Ly)
+    real(8) :: averdens(Lx, Ly), avervel(Lx, Ly, 2)
 
     velx = [0,1,1,0,-1,-1,-1,0,1]
     vely = [0,0,1,1,1,0,-1,-1,-1]
@@ -98,16 +99,17 @@ contains
       end do
     end do
     
-    averdens = call calcaverdens(Lx, Ly, Nvel, dens)
+    averdens = calcaverdens(Lx, Ly, Nvel, dens)
     avervel(:, :, 1) = avervel(:, :, 1) / averdens
     avervel(:, :, 2) = avervel(:, :, 2) / averdens
   end function
 
-  real(8) function applybc(Lx, Ly, Nvel, dens) result(newdens(Lx, Ly, Nvel))
+  function applybc(Lx, Ly, Nvel, dens) result(newdens)
     integer,intent(in) :: Lx, Ly, Nvel
     real(8),intent(in) :: dens(Lx, Ly, Nvel)
 
-    integer :: i, j, k
+    integer :: i
+    real(8) :: newdens(Lx, Ly, Nvel)
 
     newdens = dens
 

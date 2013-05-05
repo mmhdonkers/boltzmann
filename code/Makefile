@@ -26,6 +26,7 @@ LINK = $(FC) $(LDFLAGS)
 # Files (modules) to link to main program
 OBJS = 
 OBJS += plot.o
+OBJS += model.o
 OBJS += boltzmann.o
 
 all: run
