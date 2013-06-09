@@ -12,14 +12,14 @@ contains
     call plsdev("xcairo")
 
     call plscol0(0, 255, 255, 255)  ! white
-    call plscol0(1, 255, 0, 0)  ! red
-    call plscol0(2, 0, 255, 0)  ! green
-    call plscol0(3, 0, 0, 255)  ! blue
-    call plscol0(4, 255, 0, 255)  ! magenta
-    call plscol0(5, 0, 255, 255)  ! cyan
-    call plscol0(6, 255, 255, 0)  ! yellow
-    call plscol0(7, 0, 0, 0)  ! black
-    call plscol0(8, 255, 77, 0)  ! orange
+    call plscol0(1, 255, 0, 0)      ! red
+    call plscol0(2, 0, 255, 0)      ! green
+    call plscol0(3, 0, 0, 255)      ! blue
+    call plscol0(4, 255, 0, 255)    ! magenta
+    call plscol0(5, 0, 255, 255)    ! cyan
+    call plscol0(6, 255, 255, 0)    ! yellow
+    call plscol0(7, 0, 0, 0)        ! black
+    call plscol0(8, 255, 77, 0)     ! orange
     call plscol0(9, 128, 128, 128)  ! gray
 
     call plinit()
@@ -52,6 +52,25 @@ contains
         end if
       end do
     end do
+
+    call plspause(.false.)
+  end subroutine
+
+  subroutine plot_profile(Lx, Ly, vel)
+    integer,intent(in) :: Lx, Ly
+    real(8),intent(in) :: vel(Lx, Ly)
+
+    integer :: i
+    real(8) :: y(Ly)
+
+    y = [(i, i = 1, Ly)]
+
+    call plcol0(7)
+    call plenv(0d0, maxval(vel), 1d0, Ly * 1d0, 0, 0)
+    call pllab("v", "y", "velocity profile")
+    
+    call plcol0(1)
+    call plline(vel(Lx / 2,:),y)
 
     call plspause(.false.)
   end subroutine

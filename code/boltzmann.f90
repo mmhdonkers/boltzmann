@@ -25,9 +25,9 @@ program boltzmann
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 !! INPUT: Row and column size
-  integer,parameter :: Lx = 150, Ly = 50, Nvel = 9, t_final = 1000
+  integer,parameter :: Lx = 150, Ly = 50, Nvel = 9, t_final = 10000
   integer :: tt
-  real(8),parameter :: tau = 1d0
+  real(8),parameter :: tau = 20d0, rho = 1d0
   real(8) :: dens(Lx, Ly, Nvel)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -39,11 +39,14 @@ program boltzmann
   call opentextfiles
   
 !! Initialize densities for further use !!
-  dens = init(Lx, Ly, Nvel) 
+  dens = init(Lx, Ly, Nvel, rho) 
 
 !! Main simulation routine !!
   do tt = 1, t_final
     call timestep(Lx, Ly, Nvel, dens, tau)
+!    if (modulo(tt, 10) == 0) then
+      call plot_profile(Lx, Ly, calcavervel(Lx, Ly, Nvel, dens))
+!    end if
   end do
 
 !! Close text and plot commands !!
