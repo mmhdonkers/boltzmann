@@ -70,9 +70,9 @@ contains
     call pllab("v", "y", "velocity profile")
     
     call plcol0(1)
-    call plline(vel(Lx / 2,:),y)
+    call plline(vel(Lx,:),y)
 
-    call plspause(.false.)
+!    call plspause(.false.)
   end subroutine
 
   character(len=25) function numtostr(num) result(str)
