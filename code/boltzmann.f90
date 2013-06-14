@@ -25,9 +25,9 @@ program boltzmann
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 !! INPUT: Row and column size
-  integer,parameter :: Lx = 250, Ly = 100, Nvel = 9, t_final = 10000
+  integer,parameter :: Lx = 40, Ly = 80, Nvel = 9, t_final = 10000
   integer :: tt
-  real(8),parameter :: tau = 10d0, rho = 1d0
+  real(8),parameter :: tau = 0.8d0, rho = 1d0
   real(8) :: dens(Lx, Ly, Nvel)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

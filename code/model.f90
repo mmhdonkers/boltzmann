@@ -14,17 +14,17 @@ contains
     integer :: j
     real(8) :: stepdens(Lx, Ly, Nvel), deltaP
 
-!    deltaP = 0.001d0
-
-    stepdens = applybc(Lx, Ly, Nvel, dens)
+    deltaP = 0.00001d0
     
+    stepdens = applybc(Lx, Ly, Nvel, dens)
+
+    dens = (1d0 - 1 / tau) * stepdens + equil(Lx, Ly, Nvel, stepdens) / tau
+
     do j = 2, Ly - 1
-      stepdens(:, j, 2) = stepdens(:, j, 2) + deltaP
-      stepdens(:, j, 6) = stepdens(:, j, 6) - deltaP
+      dens(:, j, 2) = dens(:, j, 2) + deltaP
+      dens(:, j, 6) = dens(:, j, 6) - deltaP
     end do
-  
-    dens = (1d0 - 1 / tau) * dens + equil(Lx, Ly, Nvel, stepdens) / tau
-  end subroutine
+end subroutine
   
   function init(Lx, Ly, Nvel, rho) result(dens)
     integer,intent(in) :: Lx, Ly, Nvel
@@ -63,11 +63,15 @@ contains
     do k = 2, Nvel
       normvel = avervel(:, :, 1) * velx(k) + avervel(:, :, 2) * vely(k)
       if (modulo(k,2)==0) then
-        eqdens(:, :, k) = averdens / 9d0 * (1d0 + 3d0 * normvel + 4.5d0 * normvel**2 - 1.5d0 * sqvel)
+        eqdens(:, :, k) = averdens / 9d0 * (1d0 + 3d0 * normvel + &
+                                  4.5d0 * normvel**2 - 1.5d0 * sqvel)
       else if (modulo(k,2)==1) then
-        eqdens(:, :, k) = averdens / 36d0 * (1d0 + 3d0 * normvel + 4.5d0 * normvel**2 - 1.5d0 * sqvel)
+        eqdens(:, :, k) = averdens / 36d0 * (1d0 + 3d0 * normvel + &
+                                  4.5d0 * normvel**2 - 1.5d0 * sqvel)
       end if
     end do
+    eqdens(:,1,:) = dens(:,1,:)
+    eqdens(:,Ly,:) = dens(:,Ly,:)
   end function
 
   function calcaverdens(Lx, Ly, Nvel, dens) result(averdens)
@@ -76,6 +80,8 @@ contains
 
     integer :: i, j
     real(8) :: averdens(Lx, Ly)
+
+    averdens = 0d0
 
     do i = 1, Lx
       do j = 1, Ly
@@ -90,6 +96,8 @@ contains
 
     integer :: i, j, velx(Nvel), vely(Nvel)
     real(8) :: averdens(Lx, Ly), avervel(Lx, Ly, 2)
+
+    avervel = 0d0
 
     velx = [0,1,1,0,-1,-1,-1,0,1]
     vely = [0,0,1,1,1,0,-1,-1,-1]
@@ -109,32 +117,42 @@ contains
     integer,intent(in) :: Lx, Ly, Nvel
     real(8),intent(in) :: dens(Lx, Ly, Nvel)
 
-    integer :: i, j, ii, jj
+    integer :: i, j, ii, ju, jd
     real(8) :: newdens(Lx, Ly, Nvel)
+
+    newdens = 0d0
     
     do i = 1, Lx
-      ii = modulo(i + 1, Lx)
-      do j = 1, Ly
-        jj = modulo(j + 1, Ly)
+      ii = modulo(i + 2, Lx) + 1
+      do j = 2, Ly - 1
+!        jj = modulo(j + 1, Ly)
+        ju = j + 1
+        jd = j - 1
         newdens(i, j, 1) = dens(i, j, 1)
         newdens(ii, j, 2) = dens(i, j, 2)
-        newdens(ii, jj, 3) = dens(i, j, 3)
-        newdens(i, jj, 4) = dens(i, j, 4)
-        newdens(i, jj, 5) = dens(ii, j, 5)
+        newdens(ii, j, 3) = dens(i, jd, 3)
+        newdens(i, j, 4) = dens(i, jd, 4)
+        newdens(i, j, 5) = dens(ii, jd, 5)
         newdens(i, j, 6) = dens(ii, j, 6)
-        newdens(i, j, 7) = dens(ii, jj, 7)
-        newdens(i, j, 8) = dens(i, jj, 8)
-        newdens(ii, j, 9) = dens(i, jj, 9)
+        newdens(i, j, 7) = dens(ii, ju, 7)
+        newdens(i, j, 8) = dens(i, ju, 8)
+        newdens(ii, j, 9) = dens(i, ju, 9)
       end do
+      newdens(i, 1, 3) = dens(ii, 2, 7)
+      newdens(i, 1, 4) = dens(i, 2, 8)
+      newdens(ii, 1, 5) = dens(i, 2, 9)
+      newdens(ii, Ly, 7) = dens(i, Ly - 1, 3)
+      newdens(i, Ly, 8) = dens(i, Ly - 1, 4)
+      newdens(i, Ly, 9) = dens(ii, Ly - 1, 5)
     end do
 
-    do i = 1, Lx
-      newdens(i, 1, 3) = newdens(i, 1, 7)
-      newdens(i, 1, 4) = newdens(i, 1, 8)
-      newdens(i, 1, 5) = newdens(i, 1, 9)
-      newdens(i, Ly, 7) = newdens(i, Ly, 3)
-      newdens(i, Ly, 8) = newdens(i, Ly, 4)
-      newdens(i, Ly, 9) = newdens(i, Ly, 5)
-    end do
+!    do i = 1, Lx
+!      newdens(i, 1, 3) = newdens(i, 1, 7)
+!      newdens(i, 1, 4) = newdens(i, 1, 8)
+!      newdens(i, 1, 5) = newdens(i, 1, 9)
+!      newdens(i, Ly, 7) = newdens(i, Ly, 3)
+!      newdens(i, Ly, 8) = newdens(i, Ly, 4)
+!      newdens(i, Ly, 9) = newdens(i, Ly, 5)
+!    end do
   end function
 end module
