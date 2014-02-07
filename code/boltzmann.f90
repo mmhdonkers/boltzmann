@@ -25,10 +25,10 @@ program boltzmann
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 !! INPUT: Row and column size
-  integer,parameter :: Lx = 40, Ly = 80, Nvel = 9, t_final = 10000
-  integer :: tt
-  real(8),parameter :: tau = 0.8d0, rho = 1d0
-  real(8) :: dens(Lx, Ly, Nvel)
+  integer,parameter :: Lx = 40, Ly = 80, Nvel = 9, t_final = 100000
+  integer :: tt, j
+  real(8),parameter :: tau = 0.9d0, rho = 1.4d0
+  real(8) :: dens(Lx, Ly, Nvel), vel(Lx, Ly, 2)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Main Body !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -43,12 +43,16 @@ program boltzmann
 
 !! Main simulation routine !!
   do tt = 1, t_final
-      call plot_profile(Lx, Ly, calcavervel(Lx, Ly, Nvel, dens))
     call timestep(Lx, Ly, Nvel, dens, tau)
-!    if (modulo(tt, 10) == 0) then
-!    end if
+    if (modulo(tt, 1000) == 0) then
+      call plot_profile(Lx, Ly, calcavervel(Lx, Ly, Nvel, dens))
+    end if
   end do
 
+  vel = calcavervel(Lx, Ly, Nvel, dens)
+  do j = 1, Ly
+    WRITE(15,*) vel(1, j, 1)
+  end do
 !! Close text and plot commands !!
   call closetextfiles
   call plot_close()
@@ -61,9 +65,9 @@ contains
 
 subroutine opentextfiles
     integer :: OPEN_STATUS
-    OPEN(UNIT=15,FILE="metrop_temp.txt",STATUS="REPLACE",IOSTAT=OPEN_STATUS)
+    OPEN(UNIT=15,FILE="velocityprofile.txt",STATUS="REPLACE",IOSTAT=OPEN_STATUS)
     if (OPEN_STATUS /= 0) then
-       STOP "------------Error, metrop_temp file not opened properly------------"
+       STOP "------------Error, file not opened properly------------"
     endif
 end subroutine
 

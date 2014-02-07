@@ -58,7 +58,7 @@ contains
 
   subroutine plot_profile(Lx, Ly, vel)
     integer,intent(in) :: Lx, Ly
-    real(8),intent(in) :: vel(Lx, Ly)
+    real(8),intent(in) :: vel(Lx,  Ly, 2)
 
     integer :: i
     real(8) :: y(Ly)
@@ -66,11 +66,11 @@ contains
     y = [(i, i = 1, Ly)]
 
     call plcol0(7)
-    call plenv(0d0, maxval(vel(Lx / 2, :))*1.1, 1d0, Ly * 1d0, 0, 0)
+    call plenv(0d0, maxval(vel(1, :, 1))*1.1, 1d0, Ly * 1d0, 0, 0)
     call pllab("v", "y", "velocity profile")
     
     call plcol0(1)
-    call plline(vel(Lx / 2, :), y)
+    call plline(vel(1, :, 1), y)
 
     call plspause(.false.)
   end subroutine
